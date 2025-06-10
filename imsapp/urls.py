@@ -19,8 +19,6 @@ router.register(r"incidentevidence",IncidentEvidenceViewSet)
 router.register(r"employee",EmpViewSet)
 router.register(r"ticket",InciTicketViewSet)
 
-
-
 urlpatterns = [
     path("",include(router.urls))
 ]

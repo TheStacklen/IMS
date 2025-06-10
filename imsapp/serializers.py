@@ -34,7 +34,7 @@ class IncidentTypeSerializer(serializers.ModelSerializer):
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model=Status
-        fields="__all__"
+        fields=["name"]
 
 class DeptPOCSerializer(serializers.ModelSerializer):
     class Meta:
@@ -118,6 +118,7 @@ class ImmediateActionSerializer(serializers.ModelSerializer):
 class IncidentTicketSerializer(serializers.ModelSerializer):
     imme_action=ImmediateActionSerializer(many=True, required=False)
     incident_status=StatusSerializer(required=False,many=True)
+    # incident_status=StatusSerializer(required=False)
     class Meta:
         model=IncidentTicket
         fields=["id","requestor_id","report_type","location","department_id","description","contributing_factor","individual_involved","witnesses","imme_action","Assigned_POC","incident_status"]
@@ -126,20 +127,13 @@ class IncidentTicketSerializer(serializers.ModelSerializer):
         indi_involved=validated_data.pop("individual_involved")
         witnesses=validated_data.pop("witnesses")
         ImmediateActions=validated_data.pop("imme_action")
-
-        # status=validated_data.pop("incident_status")
         # print("\n"*4)
-        # print(status)
+        # print(incident_status)
         # print("\n"*4)
-
-        # print(validated_data)
-
         #Assign POC
         dept = validated_data.get("department_id")
         pocs = dept.poc.first()
         validated_data["Assigned_POC"] = pocs
-
-
         ticket=IncidentTicket.objects.create(**validated_data)
         for i in contrib_factor:
             ticket.contributing_factor.add(i)
@@ -154,6 +148,10 @@ class IncidentTicketSerializer(serializers.ModelSerializer):
             # action.emp_id.set(employees)
             for i in employees:
                 action.emp_id.add(i) 
+        
+        statuss=Status.objects.get(id=2)
+        IncidentStatus.objects.create(status_id=statuss, incident_id=ticket)
+        print(statuss.name)
         return ticket
 
 

@@ -85,7 +85,7 @@ class IncidentStatus(models.Model):
     id=models.AutoField(primary_key=True)
     status_id=models.ForeignKey('Status' , on_delete=models.CASCADE)
     incident_id=models.ForeignKey('IncidentTicket' , on_delete=models.CASCADE)
-    date_created=models.DateTimeField()
+    date_created=models.DateTimeField(auto_now_add=True)
 
 class IncidentEvidence(models.Model):
     id=models.AutoField(primary_key=True)
