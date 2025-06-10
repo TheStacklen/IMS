@@ -118,7 +118,7 @@ class ImmediateActionSerializer(serializers.ModelSerializer):
 class IncidentTicketSerializer(serializers.ModelSerializer):
     imme_action=ImmediateActionSerializer(many=True, required=False)
     incident_status=StatusSerializer(required=False,many=True)
-    # incident_status=StatusSerializer(required=False)
+
     class Meta:
         model=IncidentTicket
         fields=["id","requestor_id","report_type","location","department_id","description","contributing_factor","individual_involved","witnesses","imme_action","Assigned_POC","incident_status"]
@@ -127,9 +127,6 @@ class IncidentTicketSerializer(serializers.ModelSerializer):
         indi_involved=validated_data.pop("individual_involved")
         witnesses=validated_data.pop("witnesses")
         ImmediateActions=validated_data.pop("imme_action")
-        # print("\n"*4)
-        # print(incident_status)
-        # print("\n"*4)
         #Assign POC
         dept = validated_data.get("department_id")
         pocs = dept.poc.first()
