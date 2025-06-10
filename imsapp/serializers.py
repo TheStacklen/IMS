@@ -134,7 +134,7 @@ class IncidentTicketSerializer(serializers.ModelSerializer):
 
         # print(validated_data)
 
-        #Customize Assign POC
+        #Assign POC
         dept = validated_data.get("department_id")
         pocs = dept.poc.first()
         validated_data["Assigned_POC"] = pocs
