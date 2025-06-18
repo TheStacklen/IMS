@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from imsapp.models import *
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer 
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,12 +54,12 @@ class ImmediateActionSerializer(serializers.ModelSerializer):
 class ImmprovementRecomSerializer(serializers.ModelSerializer):
     class Meta:
         model=ImprovementRecommendations
-        fields="__all__"
+        fields=["action_title","responsible_emp_id"]
 
 class FollowUpActionsSerializer(serializers.ModelSerializer):
     class Meta:
         model=FollowUpActions
-        fields="__all__"
+        fields=["actions_title","responsible_emp_id"]
 
 class IncidentStatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -75,11 +76,14 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = "__all__"
+
     def create(self, validated_data):
 
-        user_data =validated_data.pop('user_id')
+        password = validated_data["user_id"].pop("password")
+        user_data = validated_data.pop('user_id')
         # Create user
         user = CustomUser.objects.create(**user_data)
+        user.set_password(password)
         user.save()
         # Create employee
         employee = Employee.objects.create(user_id=user, **validated_data)
@@ -115,18 +119,24 @@ class ImmediateActionSerializer(serializers.ModelSerializer):
         model=ImmediateAction
         exclude=["incident_id"]
 
+
+
 class IncidentTicketSerializer(serializers.ModelSerializer):
     imme_action=ImmediateActionSerializer(many=True, required=False)
     incident_status=StatusSerializer(required=False,many=True)
 
     class Meta:
         model=IncidentTicket
-        fields=["id","requestor_id","report_type","location","department_id","description","contributing_factor","individual_involved","witnesses","imme_action","Assigned_POC","incident_status"]
+        fields=["id","requestor_id","report_type","location","department_id","description","contributing_factor",
+                "individual_involved","witnesses","imme_action","Assigned_POC","incident_status","potential_severity","likelihood_of_recurrence",
+                "risk_level","recommendation","follow"
+                ]
     def create(self,validated_data):
         contrib_factor=validated_data.pop("contributing_factor")
         indi_involved=validated_data.pop("individual_involved")
         witnesses=validated_data.pop("witnesses")
         ImmediateActions=validated_data.pop("imme_action")
+        
         #Assign POC
         dept = validated_data.get("department_id")
         pocs = dept.poc.first()
@@ -148,8 +158,83 @@ class IncidentTicketSerializer(serializers.ModelSerializer):
         
         statuss=Status.objects.get(id=2)
         IncidentStatus.objects.create(status_id=statuss, incident_id=ticket)
-        print(statuss.name)
+        # print(statuss.name)
         return ticket
+    
+
+
+class ImmprovementRecomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImprovementRecommendations
+        fields = ["action_title", "responsible_emp_id"]
+
+class FollowUpActionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowUpActions
+        fields = ["actions_title", "responsible_emp_id"]
+
+class POCUpdateSerializer(serializers.ModelSerializer):
+    recommendation = ImmprovementRecomSerializer(many=True)
+    follow = FollowUpActionsSerializer(many=True)
+
+    class Meta:
+        model = IncidentTicket
+        fields = ['potential_severity', 'likelihood_of_recurrence', 'risk_level', 'recommendation', 'follow']
+    def update(self, instance, validated_data):
+        improvement_data = validated_data.pop('recommendation', [])
+        followup_data = validated_data.pop('follow', [])
+
+        instance.potential_severity = validated_data.get('potential_severity', instance.potential_severity)
+        instance.likelihood_of_recurrence = validated_data.get('likelihood_of_recurrence', instance.likelihood_of_recurrence)
+        instance.risk_level = validated_data.get('risk_level', instance.risk_level)
+        instance.save()
+
+        instance.recommendation.all().delete()
+        instance.follow.all().delete()
+
+        for item in improvement_data:
+            ImprovementRecommendations.objects.create(
+                action_title=item['action_title'],
+                responsible_emp_id=item['responsible_emp_id'],
+                incident_id=instance
+            )
+
+        for item in followup_data:
+            FollowUpActions.objects.create(
+                actions_title=item['actions_title'],
+                responsible_emp_id=item['responsible_emp_id'],
+                incident_id=instance
+            )
+
+        return instance
+    
+    #Customize
+    
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # add Custome Fields
+        token['first_name']=user.first_name
+        token['last_name']=user.last_name
+        token['emp_id']=user.employee.emp_id
+        return token
+    
+    
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
 
 
         

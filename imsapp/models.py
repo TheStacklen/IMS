@@ -38,7 +38,7 @@ class CustomUser(AbstractUser):
     
 class IncidentTicket(models.Model):
     id=models.AutoField(primary_key=True)
-    requestor_id=models.ForeignKey('Employee',on_delete=models.CASCADE)
+    requestor_id=models.ForeignKey('Employee',on_delete=models.CASCADE , null=True)
     report_type=models.ForeignKey('IncidentType', on_delete=models.CASCADE)
     occurrence_date=models.DateTimeField(auto_now_add=True)
     location=models.CharField(max_length=50)
@@ -67,7 +67,7 @@ class ImprovementRecommendations(models.Model):
     action_title=models.CharField(max_length=50)
     action_description=models.CharField(max_length=50)
     responsible_emp_id=models.ForeignKey('Employee',on_delete=models.CASCADE)
-    incident_id=models.ForeignKey('IncidentTicket',on_delete=models.CASCADE)
+    incident_id=models.ForeignKey('IncidentTicket',on_delete=models.CASCADE, null=True, related_name="recommendation")
 
 class FollowUpActions(models.Model):
     id=models.AutoField(primary_key=True)
@@ -75,7 +75,7 @@ class FollowUpActions(models.Model):
     actions_title=models.CharField(max_length=70)
     date_completed=models.DateTimeField(auto_now_add=True)
     responsible_emp_id=models.ForeignKey('employee',on_delete=models.CASCADE)
-    incident_id=models.ForeignKey('IncidentTicket',on_delete=models.CASCADE)
+    incident_id=models.ForeignKey('IncidentTicket',on_delete=models.CASCADE, null=True, related_name="follow")
 
 class Status(models.Model):
     id=models.AutoField(primary_key=True)
