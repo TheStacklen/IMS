@@ -135,7 +135,7 @@ class SendOTP(APIView):
                [email]
           )
           emailw.send(fail_silently=False)
-          return Response({'status':True,'message':'Email sent successfully'}) 
+          return Response({'status':True,'message':'OTP sent successfully'}) 
 
 class VerifyOTP(APIView):
      def post(self,request):
