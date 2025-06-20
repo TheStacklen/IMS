@@ -62,9 +62,10 @@ class FollowUpActionsSerializer(serializers.ModelSerializer):
         fields=["actions_title","responsible_emp_id"]
 
 class IncidentStatusSerializer(serializers.ModelSerializer):
+    status_name = serializers.CharField(source='status_id.name', read_only=True)
     class Meta:
-        model=IncidentStatus
-        fields="__all__"
+        model = IncidentStatus
+        fields = ["date_created", "status_name"]
 
 class IncidentEvidenceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -119,8 +120,6 @@ class ImmediateActionSerializer(serializers.ModelSerializer):
         model=ImmediateAction
         exclude=["incident_id"]
 
-
-
 class IncidentTicketSerializer(serializers.ModelSerializer):
     imme_action=ImmediateActionSerializer(many=True, required=False)
     incident_status=StatusSerializer(required=False,many=True)
@@ -161,8 +160,6 @@ class IncidentTicketSerializer(serializers.ModelSerializer):
         # print(statuss.name)
         return ticket
     
-
-
 class ImmprovementRecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImprovementRecommendations
@@ -208,8 +205,7 @@ class POCUpdateSerializer(serializers.ModelSerializer):
 
         return instance
     
-    #Customize
-    
+#Customize Token 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -220,6 +216,36 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['emp_id']=user.employee.emp_id
         return token
     
+class IncidentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=IncidentTicket
+        fields=["id"]
+    def to_representation(self,instance):
+        response= super().to_representation(instance)
+        response["potential_severity"]=instance.potential_severity
+        response["likelihood_of_recurrence"]=instance.likelihood_of_recurrence
+        response["risk_level"]=instance.risk_level
+        response["reporter"]={"name": instance.requestor_id.user_id.first_name + instance.requestor_id.user_id.last_name,
+                              "Designation":instance.requestor_id.desig_id.name}
+        response["Report Type"]=instance.report_type.name
+        response["Department"]={"id":instance.department_id.id,"name":instance.department_id.name}
+        response["inci_status"]=[i for i in IncidentStatusSerializer(instance.inci_status.all() , many=True).data]
+        response["Location"]=instance.location
+        response["Occurance_date"]=instance.occurrence_date
+        response["description"]=instance.description
+        if instance.Assigned_POC is not None:
+            response["AssignedPOC"]={"name":instance.Assigned_POC.employee_id.user_id.first_name}
+        else:
+            response["AssignedPOC"]=""
+        # print([i["name"] for i in ContribFactSerializer(instance.contributing_factor , many=True).data])
+        response["contributing_factor"]=[i["name"] for i in ContribFactSerializer(instance.contributing_factor , many=True).data]
+        response["imme_action"]=[i for i in ImmediateActionSerializer(instance.imme_action.all() , many=True).data]
+        response["witnesses"]=[i["user_id"]["first_name"] for i in EmployeeSerializer(instance.witnesses , many=True).data]
+        response["individual_involved"]=[i["user_id"]["first_name"] for i in EmployeeSerializer(instance.individual_involved.all(), many=True).data]
+        response["inci_evidence"]=[i for i in IncidentEvidenceSerializer(instance.inci_evidence.all() , many=True).data]
+        response["recommendation"]=[i for i in ImmprovementRecomSerializer(instance.recommendation.all() ,many=True).data]
+        response["follow"]=[i for i in FollowUpActionsSerializer(instance.follow , many=True).data]
+        return response
     
 
 

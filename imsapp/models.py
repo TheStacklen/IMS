@@ -43,7 +43,6 @@ class IncidentTicket(models.Model):
     occurrence_date=models.DateTimeField(auto_now_add=True)
     location=models.CharField(max_length=50)
     contributing_factor=models.ManyToManyField('ContributingFactor',db_table="incidentFactor")
-    evidence=models.FileField(upload_to="file" , blank=True , null=True)
     department_id=models.ForeignKey('Department', on_delete=models.CASCADE)
     Assigned_POC=models.ForeignKey('DepartmentPOC',on_delete=models.CASCADE , null=True)
     description = models.CharField(max_length=100) 
@@ -84,7 +83,7 @@ class Status(models.Model):
 class IncidentStatus(models.Model):
     id=models.AutoField(primary_key=True)
     status_id=models.ForeignKey('Status' , on_delete=models.CASCADE)
-    incident_id=models.ForeignKey('IncidentTicket' , on_delete=models.CASCADE)
+    incident_id=models.ForeignKey('IncidentTicket' , on_delete=models.CASCADE ,related_name="inci_status")
     date_created=models.DateTimeField(auto_now_add=True)
 
 class IncidentEvidence(models.Model):

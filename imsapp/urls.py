@@ -22,6 +22,7 @@ router.register(r"incidentevidence",IncidentEvidenceViewSet)
 router.register(r"employee",EmpViewSet)
 router.register(r"ticket",InciTicketViewSet,basename="ticket")
 router.register(r"ticket-update",TicketUpdateViewSet , basename="tick")
+router.register(r"t",allticketViewSet,basename="response")
 
 urlpatterns = [
     path("",include(router.urls)),

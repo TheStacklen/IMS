@@ -117,14 +117,15 @@ class ChangePassword(APIView):
 import random 
 sent_otp=" "
 stored_email = " "
+otp_verified= False
 class SendOTP(APIView):
      def post(self,request):              
           email=request.data['to']
           print("\n"*5)
           print(email)
-          global stored_email
+          global stored_email , sent_otp , otp_verified
           otp=str(random.randint(1000, 9999) )
-          global sent_otp 
+          otp_verified=False
           sent_otp=otp # store otp globlly
           stored_email=email # store email globlly
           print("OTP Is :",sent_otp)
@@ -139,26 +140,40 @@ class SendOTP(APIView):
 
 class VerifyOTP(APIView):
      def post(self,request):
+          global otp_verified #for use 
           entered_otp=request.data.get("otp")
-          if sent_otp!= entered_otp:
-                return Response('Invalid OTP')
-          return Response("verified successfully")
+          if sent_otp == entered_otp:
+                otp_verified = True 
+                return Response('OTP verified successfully')
+          return Response("Invalid OTP")
 
 class forgetPassword(APIView):
      def post(self , request):
+          global otp_verified , sent_otp , stored_email #for use
           new_password=request.data.get('new_password')
           confirm_password=request.data.get('confirm_password')
+          if not otp_verified:
+            return Response("OTP not verified")
+          
           if new_password!= confirm_password:
                 return Response('New Password and Confirm Password do not Match')
           try:
               user=CustomUser.objects.get(email=stored_email)
               user.set_password(new_password)
               user.save()
+              otp_verified = False
+              sent_otp = ""
+              stored_email = ""
               return Response("reset password successfully")
           except CustomUser.DoesNotExist:
                return Response("user not found")
           
+class allticketViewSet(viewsets.ModelViewSet):
+     queryset = IncidentTicket.objects.all()
+     serializer_class = IncidentSerializer
 
+
+          
 
 
      
